@@ -55,7 +55,7 @@ jobs:
 #        build_args: app_version=myjetwallet.service.external.binance-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
     - name: restart test pod
-      uses: MyJetWallet/Tools@v1-restart-pod
+      uses: MyJetWallet/Tools@restart-pod
       env:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
         NAMESPACE: services
