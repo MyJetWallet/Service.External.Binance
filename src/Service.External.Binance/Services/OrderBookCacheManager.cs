@@ -31,6 +31,7 @@ namespace Service.External.Binance.Services
             _symbols = Program.Settings.Instruments.Split(';').ToList();
 
             _api = new BinanceApi();
+            _wsClient = new DepthWebSocketClient();
 
             foreach (var symbol in _symbols)
             {

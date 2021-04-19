@@ -1,8 +1,8 @@
-﻿using SimpleTrading.SettingsReader;
+﻿using MyYamlParser;
 
 namespace Service.External.Binance.Settings
 {
-    [YamlAttributesOnly]
+    //[YamlAttributesOnly]
     public class SettingsModel
     {
         [YamlProperty("ExternalBinance.SeqServiceUrl")]
@@ -17,10 +17,10 @@ namespace Service.External.Binance.Settings
         [YamlProperty("ExternalBinance.RefreshBalanceIntervalSec")]
         public int RefreshBalanceIntervalSec { get; set; }
 
-        [YamlProperty("ExternalBinance.BinanceApiKey")]
+        [YamlProperty("ExternalBinance.ApiKey")]
         public string BinanceApiKey { get; set; }
 
-        [YamlProperty("ExternalBinance.BinanceApiSecret")]
+        [YamlProperty("ExternalBinance.ApiSecret")]
         public string BinanceApiSecret { get; set; }
     }
 }

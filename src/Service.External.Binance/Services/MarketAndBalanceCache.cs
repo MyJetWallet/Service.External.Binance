@@ -25,11 +25,12 @@ namespace Service.External.Binance.Services
 
         private readonly MyTaskTimer _timer;
 
-        public MarketAndBalanceCache(BinanceApi client, IBinanceApiUser user, ILogger<MarketAndBalanceCache> logger)
+        public MarketAndBalanceCache(ILogger<MarketAndBalanceCache> logger)
         {
-            _client = client;
-            _user = user;
             _logger = logger;
+
+            _client = new BinanceApi();
+            _user = new BinanceApiUser(Program.Settings.BinanceApiKey, Program.Settings.BinanceApiSecret);
 
             _timer = new MyTaskTimer(nameof(MarketAndBalanceCache), TimeSpan.FromSeconds(1), logger, DoTimer);
         }

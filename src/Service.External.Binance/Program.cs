@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MySettingsReader;
 using Service.External.Binance.Settings;
-using SimpleTrading.SettingsReader;
 
 namespace Service.External.Binance
 {
     public class Program
     {
-        public const string SettingsFileName = ".myjetwallet";
+        public const string SettingsFileName = ".liquidity";
 
         public static SettingsModel Settings { get; private set; }
 
@@ -24,7 +24,7 @@ namespace Service.External.Binance
         {
             return () =>
             {
-                var settings = SettingsReader.ReadSettings<SettingsModel>(SettingsFileName);
+                var settings = SettingsReader.GetSettings<SettingsModel>(SettingsFileName);
                 var value = getter.Invoke(settings);
                 return value;
             };
@@ -34,7 +34,7 @@ namespace Service.External.Binance
         {
             Console.Title = "MyJetWallet Service.External.Binance";
 
-            Settings = SettingsReader.ReadSettings<SettingsModel>(SettingsFileName);
+            Settings = SettingsReader.GetSettings<SettingsModel>(SettingsFileName);
 
             using var loggerFactory = LogConfigurator.Configure("MyJetWallet", Settings.SeqServiceUrl);
 
