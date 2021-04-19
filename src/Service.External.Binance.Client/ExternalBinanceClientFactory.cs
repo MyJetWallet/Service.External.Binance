@@ -10,11 +10,11 @@ using Service.External.Binance.Grpc;
 namespace Service.External.Binance.Client
 {
     [UsedImplicitly]
-    public class External.BinanceClientFactory
+    public class ExternalBinanceClientFactory
     {
         private readonly CallInvoker _channel;
 
-        public External.BinanceClientFactory(string assetsDictionaryGrpcServiceUrl)
+        public ExternalBinanceClientFactory(string assetsDictionaryGrpcServiceUrl)
         {
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             var channel = GrpcChannel.ForAddress(assetsDictionaryGrpcServiceUrl);
