@@ -165,7 +165,7 @@ namespace Service.External.Binance.Services
                 Id = order.orderId.ToString(),
                 Market = order.symbol,
                 Side = order.side == "BUY" ? MyJetWallet.Domain.Orders.OrderSide.Buy : MyJetWallet.Domain.Orders.OrderSide.Sell,
-                Volume = (double)order.executedQty,
+                Volume = order.side == "BUY" ? (double)order.executedQty : (double)(-order.executedQty),
                 Source = BinanceConst.Name,
                 Timestamp = dateTime,
                 Price = (double)price
