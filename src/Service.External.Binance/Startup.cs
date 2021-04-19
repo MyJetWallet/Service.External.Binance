@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Autofac;
+using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Sdk.GrpcMetrics;
 using MyJetWallet.Sdk.GrpcSchema;
 using MyJetWallet.Sdk.Service;
 using Prometheus;
 using ProtoBuf.Grpc.Server;
-using Service.External.Binance.Grpc;
 using Service.External.Binance.Modules;
 using Service.External.Binance.Services;
 using SimpleTrading.BaseMetrics;
@@ -50,7 +50,9 @@ namespace Service.External.Binance
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcSchema<HelloService, IHelloService>();
+                endpoints.MapGrpcSchema<OrderBookSourceGrpc, IOrderBookSource>();
+                endpoints.MapGrpcSchema<ExternalMarketGrpc, IExternalMarket>();
+                
 
                 endpoints.MapGrpcSchemaRegistry();
 

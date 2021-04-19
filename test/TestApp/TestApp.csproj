@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Service.External.Binance.Client\Service.External.Binance.Client.csproj" />
-    <ProjectReference Include="..\..\src\Service.External.Binance.Grpc\Service.External.Binance.Grpc.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,9 +3,9 @@ using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using JetBrains.Annotations;
+using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Sdk.GrpcMetrics;
 using ProtoBuf.Grpc.Client;
-using Service.External.Binance.Grpc;
 
 namespace Service.External.Binance.Client
 {
@@ -21,6 +21,7 @@ namespace Service.External.Binance.Client
             _channel = channel.Intercept(new PrometheusMetricsInterceptor());
         }
 
-        public IHelloService GetHelloService() => _channel.CreateGrpcService<IHelloService>();
+        public IOrderBookSource GetOrderBookSource() => _channel.CreateGrpcService<IOrderBookSource>();
+        public IExternalMarket GetExternalMarket() => _channel.CreateGrpcService<IExternalMarket>();
     }
 }

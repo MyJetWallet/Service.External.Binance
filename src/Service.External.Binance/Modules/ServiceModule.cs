@@ -16,7 +16,8 @@ namespace Service.External.Binance.Modules
             builder.RegisterInstance(api).AsSelf().SingleInstance();
             builder.RegisterInstance(user).AsSelf().SingleInstance();
 
-            builder.RegisterType<MarketAndBalanceCache>().AsSelf().As<IStartable>().SingleInstance();
+            builder.RegisterType<MarketAndBalanceCache>().AsSelf().As<IStartable>().AutoActivate().SingleInstance();
+            builder.RegisterType<OrderBookCacheManager>().AsSelf().As<IStartable>().AutoActivate().SingleInstance();
         }
     }
 }

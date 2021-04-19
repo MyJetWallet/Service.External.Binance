@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Service.External.Binance.Grpc;
+using MyJetWallet.Domain.ExternalMarketApi;
 
 // ReSharper disable UnusedMember.Global
 
@@ -11,7 +11,8 @@ namespace Service.External.Binance.Client
         {
             var factory = new ExternalBinanceClientFactory(grpcServiceUrl);
 
-            builder.RegisterInstance(factory.GetHelloService()).As<IHelloService>().SingleInstance();
+            builder.RegisterInstance(factory.GetOrderBookSource()).As<IOrderBookSource>().SingleInstance();
+            builder.RegisterInstance(factory.GetExternalMarket()).As<IExternalMarket>().SingleInstance();
         }
     }
 }

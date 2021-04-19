@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ProtoBuf.Grpc.Client;
-using Service.External.Binance.Client;
-using Service.External.Binance.Grpc.Models;
 
 namespace TestApp
 {
