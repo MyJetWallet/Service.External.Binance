@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using Binance;
-using Binance.Cache;
-using Binance.WebSocket;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Connector.Binance.Ws;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
 
@@ -15,12 +12,10 @@ namespace Service.External.Binance.Services
     {
         private readonly ILogger<OrderBookCacheManager> _logger;
 
-        private BinanceApi _api;
-        private DepthWebSocketClient _wsClient;
+        private BinanceWsOrderBooks _client;
 
-        private List<string> _symbols = new List<string>();
-        private Dictionary<string, DepthWebSocketCache> _readers = new Dictionary<string, DepthWebSocketCache>();
-
+        private string[] _symbols = { };
+        
         public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger)
         {
             _logger = logger;
@@ -28,32 +23,24 @@ namespace Service.External.Binance.Services
 
         public void Start()
         {
-            _symbols = Program.Settings.Instruments.Split(';').ToList();
+            _symbols = Program.Settings.Instruments.Split(';').ToArray();
 
-            _api = new BinanceApi();
-            _wsClient = new DepthWebSocketClient();
+            _client = new BinanceWsOrderBooks(_logger, _symbols, true);
 
-            foreach (var symbol in _symbols)
-            {
-                var reader = new DepthWebSocketCache(_api, _wsClient);
-                reader.Error += (s, e) => { _logger.LogError(e.Exception, "[WS][{symbol}] {message}", symbol, e.Exception.Message); };
-                reader.Subscribe(symbol);
-
-                _readers[symbol] = reader;
-            }
+            _client.Start();
         }
 
         public void Dispose()
         {
-            foreach (var reader in _readers.Values)
-            {
-                reader.Unsubscribe();
-            }
+            _client?.Stop();
+            _client?.Dispose();
         }
 
         public GetOrderBookResponse GetOrderBookAsync(MarketRequest request)
         {
-            if (!_readers.TryGetValue(request.Market, out var reader) || reader.OrderBook == null)
+            var data = _client.GetOrderBook(request.Market);
+
+            if (data == null)
             {
                 return new GetOrderBookResponse()
                 {
@@ -61,15 +48,13 @@ namespace Service.External.Binance.Services
                 };
             }
 
-            var data = reader.OrderBook;
-
             var resp = new GetOrderBookResponse();
             resp.OrderBook = new LeOrderBook();
             resp.OrderBook.Source = BinanceConst.Name;
             resp.OrderBook.Symbol = data.Symbol;
-            resp.OrderBook.Timestamp = data.Timestamp;
-            resp.OrderBook.Asks = data.Asks.Select(e => new LeOrderBookLevel((double)e.Price, (double)e.Quantity)).ToList();
-            resp.OrderBook.Bids = data.Bids.Select(e => new LeOrderBookLevel((double)e.Price, (double)e.Quantity)).ToList();
+            resp.OrderBook.Timestamp = data.Time;
+            resp.OrderBook.Asks = data.Asks.OrderBy(e => e.Key).Select(e => new LeOrderBookLevel((double)e.Key, (double)e.Value)).ToList();
+            resp.OrderBook.Bids = data.Bids.OrderByDescending(e => e.Key).Select(e => new LeOrderBookLevel((double)e.Key, (double)e.Value)).ToList();
 
             return resp;
         }
