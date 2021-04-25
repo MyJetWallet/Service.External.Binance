@@ -53,54 +53,11 @@ namespace Service.External.Binance.Services
 
         public async Task RefreshData()
         {
-            if (_markets == null || !_markets.Any())
-            {
-                using var activityMarket = MyTelemetry.StartActivity("Fetch market data");
+            _logger.LogInformation("Balance and market update");
 
-                var pairsSettings = Program.Settings.Instruments.Split(';').ToList();
+            await UpdateMarkets();
 
-                await Symbol.UpdateCacheAsync(_client);
-
-                var marginPairs = await _client.GetMarginPairsAsync(_user);
-                marginPairs = marginPairs.Where(e => pairsSettings.Contains(e.Symbol)).ToList();
-                var symbols = Symbol.Cache.GetAll().Where(e => pairsSettings.Contains(e.ToString())).ToList();
-
-                var list = new List<ExchangeMarketInfo>();
-                var assets = new Dictionary<string, string>();
-
-                foreach (var marginPair in marginPairs)
-                {
-                    var symbol = Symbol.Cache.Get(marginPair.Symbol);
-                    if (symbol == null)
-                        continue;
-
-                    var prm = symbol.Quantity.Increment.ToString(CultureInfo.InvariantCulture).Split('.');
-                    var volumeAccuracy = prm.Length == 2 ? prm[1].Length : 0;
-
-                    prm = symbol.Price.Increment.ToString(CultureInfo.InvariantCulture).Split('.');
-                    var priceAccuracy = prm.Length == 2 ? prm[1].Length : 0;
-
-                    var item = new ExchangeMarketInfo()
-                    {
-                        Market = marginPair.Symbol,
-                        BaseAsset = marginPair.Base,
-                        QuoteAsset = marginPair.Quote,
-                        MinVolume = (double) symbol.Quantity.Minimum,
-                        PriceAccuracy = priceAccuracy,
-                        VolumeAccuracy = volumeAccuracy
-                    };
-
-                    list.Add(item);
-                    assets[item.BaseAsset] = item.BaseAsset;
-                    assets[item.QuoteAsset] = item.QuoteAsset;
-                }
-
-                _markets = list;
-                _assets = assets.Keys.ToList();
-            }
-
-            var balances = await _client.GetMarginBalancesAsync(_user);
-            balances = balances.Where(e => _assets.Contains(e.Asset)).ToList();
+            var balances = await GetMarginAccountBalances();
 
             var dict = new Dictionary<string, ExchangeBalance>();
 
@@ -124,11 +81,82 @@ namespace Service.External.Binance.Services
                 catch (Exception ex)
                 {
                     ex.FailActivity();
-                    throw;
+                    _logger.LogError(ex, "Canoot update borrow balance");
                 }
             }
 
             _balances = dict;
+        }
+
+        private async Task<List<MarginAccountBalance>> GetMarginAccountBalances()
+        {
+            try
+            {
+                var balances = await _client.GetMarginBalancesAsync(_user);
+                balances = balances.Where(e => _assets.Contains(e.Asset)).ToList();
+                return balances;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cannot get account balance");
+                throw;
+            }
+        }
+
+        private async Task UpdateMarkets()
+        {
+            try
+            {
+                if (_markets == null || !_markets.Any())
+                {
+                    using var activityMarket = MyTelemetry.StartActivity("Fetch market data");
+
+                    var pairsSettings = Program.Settings.Instruments.Split(';').ToList();
+
+                    await Symbol.UpdateCacheAsync(_client);
+
+                    var marginPairs = await _client.GetMarginPairsAsync(_user);
+                    marginPairs = marginPairs.Where(e => pairsSettings.Contains(e.Symbol)).ToList();
+                    var symbols = Symbol.Cache.GetAll().Where(e => pairsSettings.Contains(e.ToString())).ToList();
+
+                    var list = new List<ExchangeMarketInfo>();
+                    var assets = new Dictionary<string, string>();
+
+                    foreach (var marginPair in marginPairs)
+                    {
+                        var symbol = Symbol.Cache.Get(marginPair.Symbol);
+                        if (symbol == null)
+                            continue;
+
+                        var prm = symbol.Quantity.Increment.ToString(CultureInfo.InvariantCulture).Split('.');
+                        var volumeAccuracy = prm.Length == 2 ? prm[1].Length : 0;
+
+                        prm = symbol.Price.Increment.ToString(CultureInfo.InvariantCulture).Split('.');
+                        var priceAccuracy = prm.Length == 2 ? prm[1].Length : 0;
+
+                        var item = new ExchangeMarketInfo()
+                        {
+                            Market = marginPair.Symbol,
+                            BaseAsset = marginPair.Base,
+                            QuoteAsset = marginPair.Quote,
+                            MinVolume = (double) symbol.Quantity.Minimum,
+                            PriceAccuracy = priceAccuracy,
+                            VolumeAccuracy = volumeAccuracy
+                        };
+
+                        list.Add(item);
+                        assets[item.BaseAsset] = item.BaseAsset;
+                        assets[item.QuoteAsset] = item.QuoteAsset;
+                    }
+
+                    _markets = list;
+                    _assets = assets.Keys.ToList();
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Cannot update markets");
+            }
         }
 
 
