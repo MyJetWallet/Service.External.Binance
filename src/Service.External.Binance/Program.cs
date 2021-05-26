@@ -16,6 +16,8 @@ namespace Service.External.Binance
     {
         public const string SettingsFileName = ".liquidity";
 
+        public const int StTextQuoteListenerPort = 5005;
+
         public static SettingsModel Settings { get; private set; }
 
         public static ILoggerFactory LogFactory { get; private set; }
@@ -66,6 +68,8 @@ namespace Service.External.Binance
 
                     Console.WriteLine($"HTTP PORT: {httpPort}");
                     Console.WriteLine($"GRPC PORT: {grpcPort}");
+                    Console.WriteLine($"ST Text Quote Listener PORT: {StTextQuoteListenerPort}");
+
 
                     webBuilder.ConfigureKestrel(options =>
                     {

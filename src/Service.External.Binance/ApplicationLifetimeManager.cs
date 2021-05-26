@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance
 {

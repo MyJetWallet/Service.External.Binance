@@ -1,4 +1,7 @@
-﻿using MyYamlParser;
+﻿using System.Collections.Generic;
+using System.Net;
+using MyYamlParser;
+using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Settings
 {
@@ -22,5 +25,8 @@ namespace Service.External.Binance.Settings
 
         [YamlProperty("ExternalBinance.ApiSecret")]
         public string BinanceApiSecret { get; set; }
+
+        [YamlProperty("ExternalBinance.StInstrumentsMapping")]
+        public string StInstrumentsMapping { get; set; }
     }
 }

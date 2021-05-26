@@ -1,12 +1,17 @@
-﻿using Autofac;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
 using Binance;
 using Service.External.Binance.Services;
+using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Modules
 {
-    public class ServiceModule: Module
+    public class ServiceModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
