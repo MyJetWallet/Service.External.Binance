@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Connector.Binance.Ws;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
+using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Services
@@ -13,12 +15,13 @@ namespace Service.External.Binance.Services
     {
         private readonly ILogger<OrderBookCacheManager> _logger;
         private readonly TextTcpServer _bidAskConsumer;
+        private readonly IExternalMarketSettingsAccessor _externalMarketSettingsAccessor;
 
         private BinanceWsOrderBooks _client;
 
-        private string[] _symbols = { };
+        private string[] _symbols = Array.Empty<string>();
         
-        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger)
+        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger, IExternalMarketSettingsAccessor externalMarketSettingsAccessor)
         {
             if (!string.IsNullOrEmpty(Program.Settings.StInstrumentsMapping))
             {
@@ -31,17 +34,17 @@ namespace Service.External.Binance.Services
 
             
             _logger = logger;
+            _externalMarketSettingsAccessor = externalMarketSettingsAccessor;
         }
 
         public void Start()
         {
             _bidAskConsumer?.Start();
 
-            _symbols = Program.Settings.Instruments.Split(';').ToArray();
+            _symbols = _externalMarketSettingsAccessor.GetExternalMarketSettingsList().Select(e => e.Market).ToArray();
 
-            _client = new BinanceWsOrderBooks(_logger, _symbols, true);
+            _client = new BinanceWsOrderBooks(_logger, _symbols, true) {BestPriceUpdateCallback = BestPriceUpdate};
 
-            _client.BestPriceUpdateCallback = BestPriceUpdate;
 
             _client.Start();
         }
@@ -58,6 +61,21 @@ namespace Service.External.Binance.Services
             _client?.Dispose();
         }
 
+        public async Task Resubscribe(string symbol)
+        {
+            await _client.Reset(symbol);
+        }
+
+        public async Task Subscribe(string symbol)
+        {
+            await _client.Subscribe(symbol);
+        }
+
+        public async Task Unsubscribe(string symbol)
+        {
+            await _client.Unsubscribe(symbol);
+        }
+
         public GetOrderBookResponse GetOrderBookAsync(MarketRequest request)
         {
             var data = _client.GetOrderBook(request.Market);
@@ -70,13 +88,20 @@ namespace Service.External.Binance.Services
                 };
             }
 
-            var resp = new GetOrderBookResponse();
-            resp.OrderBook = new LeOrderBook();
-            resp.OrderBook.Source = BinanceConst.Name;
-            resp.OrderBook.Symbol = data.Symbol;
-            resp.OrderBook.Timestamp = data.Time;
-            resp.OrderBook.Asks = data.Asks.OrderBy(e => e.Key).Select(e => new LeOrderBookLevel((double)e.Key, (double)e.Value)).ToList();
-            resp.OrderBook.Bids = data.Bids.OrderByDescending(e => e.Key).Select(e => new LeOrderBookLevel((double)e.Key, (double)e.Value)).ToList();
+            var resp = new GetOrderBookResponse
+            {
+                OrderBook = new LeOrderBook
+                {
+                    Source = BinanceConst.Name,
+                    Symbol = data.Symbol,
+                    Timestamp = data.Time,
+                    Asks = data.Asks.OrderBy(e => e.Key)
+                        .Select(e => new LeOrderBookLevel((double) e.Key, (double) e.Value))
+                        .ToList(),
+                    Bids = data.Bids.OrderByDescending(e => e.Key)
+                        .Select(e => new LeOrderBookLevel((double) e.Key, (double) e.Value)).ToList()
+                }
+            };
 
             return resp;
         }

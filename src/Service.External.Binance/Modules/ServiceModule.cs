@@ -6,6 +6,11 @@ using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
 using Binance;
+using MyJetWallet.Sdk.ExternalMarketsSettings.NoSql;
+using MyJetWallet.Sdk.ExternalMarketsSettings.Services;
+using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
+using MyNoSqlServer.Abstractions;
+using MyNoSqlServer.DataWriter;
 using Service.External.Binance.Services;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
@@ -33,6 +38,27 @@ namespace Service.External.Binance.Modules
                 .AsSelf()
                 .As<IStartable>()
                 .AutoActivate()
+                .SingleInstance();
+
+            builder
+                .RegisterType<ExternalMarketSettingsManager>()
+                .WithParameter("name", BinanceConst.Name)
+                .As<IExternalMarketSettingsManager>()
+                .As<IExternalMarketSettingsAccessor>()
+                .AsSelf()
+                .SingleInstance();
+
+
+            RegisterMyNoSqlWriter<ExternalMarketSettingsNoSql>(builder, ExternalMarketSettingsNoSql.TableName);
+        }
+
+        private void RegisterMyNoSqlWriter<TEntity>(ContainerBuilder builder, string table)
+            where TEntity : IMyNoSqlDbEntity, new()
+        {
+            builder.Register(ctx =>
+                    new MyNoSqlServerDataWriter<TEntity>(
+                        Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), table, true))
+                .As<IMyNoSqlServerDataWriter<TEntity>>()
                 .SingleInstance();
         }
     }
