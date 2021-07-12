@@ -28,12 +28,12 @@ namespace Service.External.Binance.Services
             _logger = logger;
         }
 
-        public Task<GetNameResult> GetNameAsync()
+        public Task<GetNameResult> GetNameAsync(GetNameRequest request)
         {
             return Task.FromResult(new GetNameResult() {Name = BinanceConst.Name});
         }
 
-        public Task<GetBalancesResponse> GetBalancesAsync()
+        public Task<GetBalancesResponse> GetBalancesAsync(GetBalancesRequest request)
         {
             var list = _cache.GetBalances();
             return Task.FromResult(new GetBalancesResponse() {Balances = list});
@@ -45,7 +45,7 @@ namespace Service.External.Binance.Services
             return Task.FromResult(new GetMarketInfoResponse() { Info = list.FirstOrDefault(e => e.Market == request.Market) });
         }
 
-        public Task<GetMarketInfoListResponse> GetMarketInfoListAsync()
+        public Task<GetMarketInfoListResponse> GetMarketInfoListAsync(GetMarketInfoListRequest request)
         {
             var list = _cache.GetMarkets();
             return Task.FromResult(new GetMarketInfoListResponse() { Infos = list });
