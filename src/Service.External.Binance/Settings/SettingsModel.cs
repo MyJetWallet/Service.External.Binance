@@ -14,9 +14,6 @@ namespace Service.External.Binance.Settings
         [YamlProperty("ExternalBinance.ZipkinUrl")]
         public string ZipkinUrl { get; set; }
 
-        [YamlProperty("ExternalBinance.Instruments")]
-        public string Instruments { get; set; }
-
         [YamlProperty("ExternalBinance.RefreshBalanceIntervalSec")]
         public int RefreshBalanceIntervalSec { get; set; }
 
@@ -28,5 +25,8 @@ namespace Service.External.Binance.Settings
 
         [YamlProperty("ExternalBinance.StInstrumentsMapping")]
         public string StInstrumentsMapping { get; set; }
+        
+        [YamlProperty("ExternalBinance.MyNoSqlWriterUrl")]
+        public string MyNoSqlWriterUrl { get; set; }
     }
 }

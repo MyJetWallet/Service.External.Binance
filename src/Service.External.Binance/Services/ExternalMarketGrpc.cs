@@ -8,6 +8,8 @@ using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
 using MyJetWallet.Sdk.Service;
 using Newtonsoft.Json;
+using OrderSide = MyJetWallet.Domain.Orders.OrderSide;
+// ReSharper disable InconsistentLogPropertyNaming
 
 namespace Service.External.Binance.Services
 {
@@ -26,12 +28,12 @@ namespace Service.External.Binance.Services
             _logger = logger;
         }
 
-        public Task<GetNameResult> GetNameAsync()
+        public Task<GetNameResult> GetNameAsync(GetNameRequest request)
         {
             return Task.FromResult(new GetNameResult() {Name = BinanceConst.Name});
         }
 
-        public Task<GetBalancesResponse> GetBalancesAsync()
+        public Task<GetBalancesResponse> GetBalancesAsync(GetBalancesRequest request)
         {
             var list = _cache.GetBalances();
             return Task.FromResult(new GetBalancesResponse() {Balances = list});
@@ -43,7 +45,7 @@ namespace Service.External.Binance.Services
             return Task.FromResult(new GetMarketInfoResponse() { Info = list.FirstOrDefault(e => e.Market == request.Market) });
         }
 
-        public Task<GetMarketInfoListResponse> GetMarketInfoListAsync()
+        public Task<GetMarketInfoListResponse> GetMarketInfoListAsync(GetMarketInfoListRequest request)
         {
             var list = _cache.GetMarkets();
             return Task.FromResult(new GetMarketInfoListResponse() { Infos = list });
@@ -83,7 +85,7 @@ namespace Service.External.Binance.Services
                 var clientOrder = new MarketOrder(_user)
                 {
                     Symbol = request.Market,
-                    Side = request.Side == MyJetWallet.Domain.Orders.OrderSide.Buy ? OrderSide.Buy : OrderSide.Sell,
+                    Side = request.Side == OrderSide.Buy ? global::Binance.OrderSide.Buy : global::Binance.OrderSide.Sell,
                     Quantity = (decimal) Math.Abs(request.Volume),
                     Id = request.ReferenceId
                 };
@@ -164,7 +166,7 @@ namespace Service.External.Binance.Services
                 ReferenceId = order.clientOrderId,
                 Id = order.orderId.ToString(),
                 Market = order.symbol,
-                Side = order.side == "BUY" ? MyJetWallet.Domain.Orders.OrderSide.Buy : MyJetWallet.Domain.Orders.OrderSide.Sell,
+                Side = order.side == "BUY" ? OrderSide.Buy : OrderSide.Sell,
                 Volume = order.side == "BUY" ? (double)order.executedQty : (double)(-order.executedQty),
                 Source = BinanceConst.Name,
                 Timestamp = dateTime,
@@ -198,10 +200,5 @@ namespace Service.External.Binance.Services
                 throw;
             }
         }
-    }
-
-    internal static class BinanceConst
-    {
-        public const string Name = "Binance";
     }
 }

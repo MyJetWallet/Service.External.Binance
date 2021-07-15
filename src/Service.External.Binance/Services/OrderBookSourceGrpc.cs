@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
+
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace Service.External.Binance.Services
 {
