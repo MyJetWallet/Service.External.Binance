@@ -14,7 +14,7 @@ namespace Service.External.Binance
 {
     public class Program
     {
-        public const string SettingsFileName = ".liquidity";
+        public const string SettingsFileName = ".myjetwallet";
 
         public const int StTextQuoteListenerPort = 5005;
 
