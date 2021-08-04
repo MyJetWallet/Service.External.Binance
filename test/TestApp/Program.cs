@@ -25,7 +25,7 @@ namespace TestApp
                     }));
 
             var client = new BinanceWsOrderBooks(loggerFactory.CreateLogger<BinanceWsOrderBooks>(), new []{ "" }, true);
-            client.BestPriceUpdateEvent += BestPriceUpdate
+            client.BestPriceUpdateEvent += BestPriceUpdate;
 
             client.Start();
 
