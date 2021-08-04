@@ -18,12 +18,12 @@ namespace Service.External.Binance.Services
             _marketService = marketService;
         }
 
-        public Task<GetNameResult> GetNameAsync()
+        public Task<GetNameResult> GetNameAsync(GetOrderBookNameRequest request)
         {
             return Task.FromResult(new GetNameResult() { Name = BinanceConst.Name });
         }
 
-        public Task<GetSymbolResponse> GetSymbolsAsync()
+        public Task<GetSymbolResponse> GetSymbolsAsync(GetSymbolsRequest request)
         {
             var list = _marketService.GetMarkets().Select(e => e.Market).ToList();
             return Task.FromResult(new GetSymbolResponse() {Symbols = list});
