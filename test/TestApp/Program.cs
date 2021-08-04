@@ -24,11 +24,8 @@ namespace TestApp
                         options.TimestampFormat = "hh:mm:ss ";
                     }));
 
-            var client = new BinanceWsOrderBooks(loggerFactory.CreateLogger<BinanceWsOrderBooks>(), new []{ "" }, true)
-            {
-                BestPriceUpdateCallback = BestPriceUpdate
-            };
-
+            var client = new BinanceWsOrderBooks(loggerFactory.CreateLogger<BinanceWsOrderBooks>(), new []{ "" }, true);
+            client.BestPriceUpdateEvent += BestPriceUpdate
 
             client.Start();
 

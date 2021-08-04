@@ -43,7 +43,8 @@ namespace Service.External.Binance.Services
 
             _symbols = _externalMarketSettingsAccessor.GetExternalMarketSettingsList().Select(e => e.Market).ToArray();
 
-            _client = new BinanceWsOrderBooks(_logger, _symbols, true) {BestPriceUpdateCallback = BestPriceUpdate};
+            _client = new BinanceWsOrderBooks(_logger, _symbols, true);
+            _client.BestPriceUpdateEvent += BestPriceUpdate;
 
 
             _client.Start();
