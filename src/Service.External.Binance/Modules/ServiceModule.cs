@@ -6,9 +6,12 @@ using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
 using Binance;
+using MyJetWallet.Domain.Prices;
 using MyJetWallet.Sdk.ExternalMarketsSettings.NoSql;
 using MyJetWallet.Sdk.ExternalMarketsSettings.Services;
 using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
+using MyJetWallet.Sdk.Service;
+using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataWriter;
 using Service.External.Binance.Services;
@@ -50,6 +53,10 @@ namespace Service.External.Binance.Modules
 
 
             RegisterMyNoSqlWriter<ExternalMarketSettingsNoSql>(builder, ExternalMarketSettingsNoSql.TableName);
+
+            var serviceBusClient = builder.RegisterMyServiceBusTcpClient(() => Program.Settings.ServiceBusHostPort, ApplicationEnvironment.HostName, Program.LogFactory);
+
+            builder.RegisterMyServiceBusPublisher<BidAsk>(serviceBusClient, "jetwallet-external-prices", false);
         }
 
         private void RegisterMyNoSqlWriter<TEntity>(ContainerBuilder builder, string table)

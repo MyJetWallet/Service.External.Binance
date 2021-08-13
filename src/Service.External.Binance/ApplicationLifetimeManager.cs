@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyServiceBus.TcpClient;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance
@@ -8,16 +9,19 @@ namespace Service.External.Binance
     public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
     {
         private readonly ILogger<ApplicationLifetimeManager> _logger;
+        private readonly MyServiceBusTcpClient _serviceBusTcpClient;
 
-        public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, ILogger<ApplicationLifetimeManager> logger)
+        public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, ILogger<ApplicationLifetimeManager> logger, MyServiceBusTcpClient serviceBusTcpClient)
             : base(appLifetime)
         {
             _logger = logger;
+            _serviceBusTcpClient = serviceBusTcpClient;
         }
 
         protected override void OnStarted()
         {
             _logger.LogInformation("OnStarted has been called.");
+            _serviceBusTcpClient.Start();
         }
 
         protected override void OnStopping()

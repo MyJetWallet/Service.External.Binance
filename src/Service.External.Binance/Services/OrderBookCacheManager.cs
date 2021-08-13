@@ -2,10 +2,12 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Connector.Binance.Ws;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
+using MyJetWallet.Domain.Prices;
 using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
@@ -16,12 +18,13 @@ namespace Service.External.Binance.Services
         private readonly ILogger<OrderBookCacheManager> _logger;
         private readonly TextTcpServer _bidAskConsumer;
         private readonly IExternalMarketSettingsAccessor _externalMarketSettingsAccessor;
+        private readonly IPublisher<BidAsk> _publisher;
 
         private BinanceWsOrderBooks _client;
 
         private string[] _symbols = Array.Empty<string>();
         
-        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger, IExternalMarketSettingsAccessor externalMarketSettingsAccessor)
+        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger, IExternalMarketSettingsAccessor externalMarketSettingsAccessor, IPublisher<BidAsk> publisher)
         {
             if (!string.IsNullOrEmpty(Program.Settings.StInstrumentsMapping))
             {
@@ -35,6 +38,7 @@ namespace Service.External.Binance.Services
             
             _logger = logger;
             _externalMarketSettingsAccessor = externalMarketSettingsAccessor;
+            _publisher = publisher;
         }
 
         public void Start()
@@ -53,6 +57,21 @@ namespace Service.External.Binance.Services
         private void BestPriceUpdate(DateTime timestamp, string symbol, decimal bid, decimal ask)
         {
             _bidAskConsumer?.ConsumeBidAsk(symbol, (double)bid, (double)ask, timestamp);
+
+            try
+            {
+                _publisher.PublishAsync(new BidAsk()
+                {
+                    Id = symbol,
+                    Ask = (double) ask,
+                    Bid = (double) bid,
+                    DateTime = timestamp,
+                    LiquidityProvider = "Binance"
+                });
+            }
+            catch (Exception)
+            {
+            }
         }
 
         public void Dispose()

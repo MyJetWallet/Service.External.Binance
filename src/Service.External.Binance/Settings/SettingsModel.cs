@@ -28,5 +28,8 @@ namespace Service.External.Binance.Settings
         
         [YamlProperty("ExternalBinance.MyNoSqlWriterUrl")]
         public string MyNoSqlWriterUrl { get; set; }
+
+        [YamlProperty("ExternalBinance.ServiceBusHostPort")]
+        public string ServiceBusHostPort { get; set; }
     }
 }
