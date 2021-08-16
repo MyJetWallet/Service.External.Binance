@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using DotNetCoreDecorators;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Connector.Binance.Ws;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
 using MyJetWallet.Domain.Prices;
 using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
+using MyJetWallet.Sdk.Service.Tools;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Services
@@ -19,6 +22,10 @@ namespace Service.External.Binance.Services
         private readonly TextTcpServer _bidAskConsumer;
         private readonly IExternalMarketSettingsAccessor _externalMarketSettingsAccessor;
         private readonly IPublisher<BidAsk> _publisher;
+
+        private Dictionary<string, BidAsk> _updates = new Dictionary<string, BidAsk>();
+
+        private MyTaskTimer _timer;
 
         private BinanceWsOrderBooks _client;
 
@@ -39,7 +46,34 @@ namespace Service.External.Binance.Services
             _logger = logger;
             _externalMarketSettingsAccessor = externalMarketSettingsAccessor;
             _publisher = publisher;
+            _timer = new MyTaskTimer(nameof(OrderBookCacheManager), TimeSpan.FromSeconds(1), logger, DoTime).DisableTelemetry();
         }
+
+        private async Task DoTime()
+        {
+            List<BidAsk> updates;
+            lock (_updates)
+            {
+                updates = _updates.Values.ToList();
+                _updates.Clear();
+            }
+
+            var taskList = new List<Task>();
+            foreach (var bidAsk in updates)
+            {
+                taskList.Add(_publisher.PublishAsync(bidAsk).AsTask());
+            }
+
+            try
+            {
+                await Task.WhenAll(taskList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cannot publish price updates");
+            }
+        }
+
 
         public void Start()
         {
@@ -52,30 +86,37 @@ namespace Service.External.Binance.Services
 
 
             _client.Start();
+
+            _timer.Start();
         }
 
         private void BestPriceUpdate(DateTime timestamp, string symbol, decimal bid, decimal ask)
         {
-            _bidAskConsumer?.ConsumeBidAsk(symbol, (double)bid, (double)ask, timestamp);
-
             try
             {
-                _publisher.PublishAsync(new BidAsk()
+                _bidAskConsumer?.ConsumeBidAsk(symbol, (double) bid, (double) ask, timestamp);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CAnnot publish BidAsk to TextTcpServer");
+            }
+
+            lock (_updates)
+            {
+                _updates[symbol] = new BidAsk()
                 {
                     Id = symbol,
                     Ask = (double) ask,
                     Bid = (double) bid,
                     DateTime = timestamp,
                     LiquidityProvider = "Binance"
-                });
-            }
-            catch (Exception)
-            {
+                };
             }
         }
 
         public void Dispose()
         {
+            _timer.Dispose();
             _bidAskConsumer?.Stop();
             _client?.Stop();
             _client?.Dispose();
