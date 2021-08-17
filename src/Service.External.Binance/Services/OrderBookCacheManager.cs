@@ -52,6 +52,8 @@ namespace Service.External.Binance.Services
         private async Task DoTime()
         {
             List<BidAsk> updates;
+
+
             lock (_updates)
             {
                 updates = _updates.Values.ToList();
@@ -109,7 +111,7 @@ namespace Service.External.Binance.Services
                     Ask = (double) ask,
                     Bid = (double) bid,
                     DateTime = timestamp,
-                    LiquidityProvider = "Binance"
+                    LiquidityProvider = BinanceConst.Name
                 };
             }
         }
