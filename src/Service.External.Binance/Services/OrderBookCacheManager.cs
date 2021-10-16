@@ -12,6 +12,7 @@ using MyJetWallet.Domain.ExternalMarketApi.Models;
 using MyJetWallet.Domain.Prices;
 using MyJetWallet.Sdk.ExternalMarketsSettings.Settings;
 using MyJetWallet.Sdk.Service.Tools;
+using MyJetWallet.Sdk.ServiceBus;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Services
@@ -21,7 +22,7 @@ namespace Service.External.Binance.Services
         private readonly ILogger<OrderBookCacheManager> _logger;
         private readonly TextTcpServer _bidAskConsumer;
         private readonly IExternalMarketSettingsAccessor _externalMarketSettingsAccessor;
-        private readonly IPublisher<BidAsk> _publisher;
+        private readonly IServiceBusPublisher<BidAsk> _publisher;
 
         private Dictionary<string, BidAsk> _updates = new Dictionary<string, BidAsk>();
 
@@ -31,7 +32,9 @@ namespace Service.External.Binance.Services
 
         private string[] _symbols = Array.Empty<string>();
         
-        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger, IExternalMarketSettingsAccessor externalMarketSettingsAccessor, IPublisher<BidAsk> publisher)
+        public OrderBookCacheManager(ILogger<OrderBookCacheManager> logger, 
+            IExternalMarketSettingsAccessor externalMarketSettingsAccessor, 
+            IServiceBusPublisher<BidAsk> publisher)
         {
             if (!string.IsNullOrEmpty(Program.Settings.StInstrumentsMapping))
             {
@@ -60,15 +63,9 @@ namespace Service.External.Binance.Services
                 _updates.Clear();
             }
 
-            var taskList = new List<Task>();
-            foreach (var bidAsk in updates)
-            {
-                taskList.Add(_publisher.PublishAsync(bidAsk).AsTask());
-            }
-
             try
             {
-                await Task.WhenAll(taskList);
+                await _publisher.PublishAsync(updates);
             }
             catch (Exception ex)
             {
