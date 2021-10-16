@@ -12,7 +12,7 @@ using MyJetWallet.Sdk.Service.Tools;
 
 namespace Service.External.Binance.Services
 {
-    public class MarketAndBalanceCache: IStartable, IDisposable
+    public class MarketAndBalanceCache: IDisposable
     {
         private readonly BinanceApi _client;
         private readonly IBinanceApiUser _user;

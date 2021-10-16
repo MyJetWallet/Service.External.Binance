@@ -32,14 +32,12 @@ namespace Service.External.Binance.Modules
             builder
                 .RegisterType<MarketAndBalanceCache>()
                 .AsSelf()
-                .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
 
             builder
                 .RegisterType<OrderBookCacheManager>()
                 .AsSelf()
-                .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
 

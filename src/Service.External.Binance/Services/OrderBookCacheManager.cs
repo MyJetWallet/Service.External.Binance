@@ -17,7 +17,7 @@ using SimpleTrading.FeedTcpContext.TcpServer;
 
 namespace Service.External.Binance.Services
 {
-    public class OrderBookCacheManager: IStartable, IDisposable
+    public class OrderBookCacheManager: IDisposable
     {
         private readonly ILogger<OrderBookCacheManager> _logger;
         private readonly TextTcpServer _bidAskConsumer;
