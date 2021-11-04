@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using MyJetWallet.Sdk.Service;
 using MyYamlParser;
 using SimpleTrading.FeedTcpContext.TcpServer;
 
@@ -10,6 +11,9 @@ namespace Service.External.Binance.Settings
     {
         [YamlProperty("ExternalBinance.SeqServiceUrl")]
         public string SeqServiceUrl { get; set; }
+        
+        [YamlProperty("ExternalBinance.ElkLogs")]
+        public LogElkSettings ElkLogs { get; set; }
 
         [YamlProperty("ExternalBinance.ZipkinUrl")]
         public string ZipkinUrl { get; set; }
