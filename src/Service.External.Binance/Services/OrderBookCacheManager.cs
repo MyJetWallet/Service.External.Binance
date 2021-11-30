@@ -50,7 +50,7 @@ namespace Service.External.Binance.Services
             _logger = logger;
             _externalMarketSettingsAccessor = externalMarketSettingsAccessor;
             _publisher = publisher;
-            _timer = new MyTaskTimer(nameof(OrderBookCacheManager), TimeSpan.FromMilliseconds(500), logger, DoTime).DisableTelemetry();
+            _timer = new MyTaskTimer(nameof(OrderBookCacheManager), TimeSpan.FromMilliseconds(200), logger, DoTime).DisableTelemetry();
         }
 
         private async Task DoTime()
@@ -66,7 +66,8 @@ namespace Service.External.Binance.Services
 
             try
             {
-                await _publisher.PublishAsync(updates);
+                if (updates.Any())
+                    await _publisher.PublishAsync(updates);
             }
             catch (Exception ex)
             {
