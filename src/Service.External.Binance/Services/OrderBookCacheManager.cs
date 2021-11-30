@@ -26,9 +26,10 @@ namespace Service.External.Binance.Services
 
         private Dictionary<string, BidAsk> _updates = new Dictionary<string, BidAsk>();
 
-        private MyTaskTimer _timer;
+        private Dictionary<string, BinanceWsOrderBooks> _clientBySymbols = new Dictionary<string, BinanceWsOrderBooks>();
+        private List<BinanceWsOrderBooks> _clients = new List<BinanceWsOrderBooks>();
 
-        private BinanceWsOrderBooks _client;
+        private MyTaskTimer _timer;
 
         private string[] _symbols = Array.Empty<string>();
         
@@ -80,12 +81,23 @@ namespace Service.External.Binance.Services
 
             _symbols = _externalMarketSettingsAccessor.GetExternalMarketSettingsList().Select(e => e.Market).ToArray();
 
-            _client = new BinanceWsOrderBooks(_logger, _symbols, true);
-            _client.BestPriceUpdateEvent += BestPriceUpdate;
-
-
-            _client.Start();
-
+            var size = _symbols.Length / 10;
+            foreach (var chunk in _symbols.SplitToChunks(size))
+            {
+                var client = new BinanceWsOrderBooks(_logger, chunk.ToArray(), true);
+                _clients.Add(client);
+                client.BestPriceUpdateEvent += BestPriceUpdate;
+                client.Start();
+                
+                
+                foreach (var symbol in chunk)
+                {
+                    _clientBySymbols[symbol] = client;
+                }
+            }
+            
+            _logger.LogInformation($"Start {_clients.Count} client to binance, by {size} instruments");
+            
             _timer.Start();
         }
 
@@ -117,29 +129,50 @@ namespace Service.External.Binance.Services
         {
             _timer.Dispose();
             _bidAskConsumer?.Stop();
-            _client?.Stop();
-            _client?.Dispose();
+
+            foreach (var client in _clients)
+            {
+                client?.Stop();
+                client?.Dispose();
+            }
+            _clients.Clear();
         }
 
         public async Task Resubscribe(string symbol)
         {
-            await _client.Reset(symbol);
+            if (_clientBySymbols.TryGetValue(symbol, out var client))
+            {
+                await client.Reset(symbol);
+            }
         }
 
         public async Task Subscribe(string symbol)
         {
-            await _client.Subscribe(symbol);
+            if (_clientBySymbols.ContainsKey(symbol))
+                return;
+            
+            var client = _clients.Last();
+            await client.Subscribe(symbol);
+            _clientBySymbols[symbol] = client;
         }
 
         public async Task Unsubscribe(string symbol)
         {
-            await _client.Unsubscribe(symbol);
+            if (_clientBySymbols.TryGetValue(symbol, out var client))
+            {
+                await client.Unsubscribe(symbol);
+                _clientBySymbols.Remove(symbol);
+            }
         }
 
         public GetOrderBookResponse GetOrderBookAsync(MarketRequest request)
         {
-            var data = _client.GetOrderBook(request.Market);
-
+            BinanceOrderBookCache data = null;
+            if (_clientBySymbols.TryGetValue(request.Market, out var client))
+            {
+                data = client.GetOrderBook(request.Market);
+            } 
+            
             if (data == null)
             {
                 return new GetOrderBookResponse()
