@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Binance;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
@@ -23,6 +22,7 @@ namespace Service.External.Binance.Services
         
 
         private readonly MyTaskTimer _timer;
+        private int _countFailUpdate;
 
         public MarketAndBalanceCache(ILogger<MarketAndBalanceCache> logger, IExternalMarketSettingsAccessor externalMarketSettingsAccessor)
         {
@@ -32,7 +32,7 @@ namespace Service.External.Binance.Services
             _client = new BinanceApi();
             _user = new BinanceApiUser(Program.Settings.BinanceApiKey, Program.Settings.BinanceApiSecret);
 
-            _timer = new MyTaskTimer(nameof(MarketAndBalanceCache), TimeSpan.FromSeconds(1), logger, DoTimer);
+            _timer = new MyTaskTimer(nameof(MarketAndBalanceCache), TimeSpan.FromSeconds(10), logger, DoTimer);
         }
 
         private async Task DoTimer()
@@ -43,10 +43,13 @@ namespace Service.External.Binance.Services
             try
             {
                 await RefreshData();
+                _countFailUpdate = 0;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error on refresh balance");
+                _countFailUpdate++;
+                if (_countFailUpdate > 10) _logger.LogError(ex, "Error on refresh balance");
+                else _logger.LogWarning(ex, "Error on refresh balance");
                 ex.FailActivity();
             }
         }
@@ -79,7 +82,8 @@ namespace Service.External.Binance.Services
                 catch (Exception ex)
                 {
                     ex.FailActivity();
-                    _logger.LogError(ex, "Canoot update borrow balance");
+                    _logger.LogWarning(ex, $"Cannot update borrow balance: {ex.Message}");
+                    throw;
                 }
             }
 
@@ -99,7 +103,7 @@ namespace Service.External.Binance.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Cannot get account balance");
+                _logger.LogWarning(ex, "Cannot get account balance");
                 throw;
             }
         }
