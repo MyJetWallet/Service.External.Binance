@@ -73,7 +73,7 @@ namespace Service.External.Binance.Services
                     var item = new ExchangeBalance()
                     {
                         Symbol = balance.Asset,
-                        Balance = balance.Free,
+                        Balance = balance.Free - balance.Borrowed,
                         Free = (decimal) free
                     };
 
@@ -98,6 +98,7 @@ namespace Service.External.Binance.Services
                 var baseAssets = markets.Select(e => e.BaseAsset);
                 var quoteAssets = markets.Select(e => e.QuoteAsset);
                 var balances = await _client.GetMarginBalancesAsync(_user);
+                
                 balances = balances.Where(e => baseAssets.Contains(e.Asset) || quoteAssets.Contains(e.Asset)).ToList();
                 return balances;
             }

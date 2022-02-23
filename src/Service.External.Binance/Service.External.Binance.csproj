@@ -12,7 +12,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-    <PackageReference Include="MyJetWallet.Binance" Version="1.0.5" />
+    <PackageReference Include="MyJetWallet.Binance" Version="1.0.6" />
     <PackageReference Include="MyJetWallet.Connector.Binance" Version="1.0.8" />
     <PackageReference Include="MyJetWallet.Domain.ExternalMarketApi" Version="1.2.0" />
     <PackageReference Include="MyJetWallet.Sdk.ExternalMarketsSettings" Version="1.0.4" />
