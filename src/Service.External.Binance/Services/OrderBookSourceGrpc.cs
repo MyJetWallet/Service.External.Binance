@@ -10,12 +10,10 @@ namespace Service.External.Binance.Services
     public class OrderBookSourceGrpc : IOrderBookSource
     {
         private readonly OrderBookCacheManager _manager;
-        private readonly MarketAndBalanceCache _marketService;
 
-        public OrderBookSourceGrpc(OrderBookCacheManager manager, MarketAndBalanceCache marketService)
+        public OrderBookSourceGrpc(OrderBookCacheManager manager)
         {
             _manager = manager;
-            _marketService = marketService;
         }
 
         public Task<GetNameResult> GetNameAsync(GetOrderBookNameRequest request)
@@ -25,13 +23,13 @@ namespace Service.External.Binance.Services
 
         public Task<GetSymbolResponse> GetSymbolsAsync(GetSymbolsRequest request)
         {
-            var list = _marketService.GetMarkets().Select(e => e.Market).ToList();
+            var list = _manager.GetMarkets().Select(e => e.Market).ToList();
             return Task.FromResult(new GetSymbolResponse() {Symbols = list});
         }
 
         public Task<HasSymbolResponse> HasSymbolAsync(MarketRequest request)
         {
-            var result = _marketService.GetMarkets().Any(e => e.Market == request.Market);
+            var result = _manager.GetMarkets().Any(e => e.Market == request.Market);
             return Task.FromResult(new HasSymbolResponse() {Result = result});
         }
 

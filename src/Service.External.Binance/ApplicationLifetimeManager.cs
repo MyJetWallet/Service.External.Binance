@@ -13,19 +13,16 @@ namespace Service.External.Binance
         private readonly ILogger<ApplicationLifetimeManager> _logger;
         private readonly ServiceBusLifeTime _serviceBusTcpClient;
         private readonly OrderBookCacheManager _orderBookCacheManager;
-        private readonly MarketAndBalanceCache _marketAndBalanceCache;
 
         public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, 
             ILogger<ApplicationLifetimeManager> logger, 
             ServiceBusLifeTime serviceBusTcpClient, 
-            OrderBookCacheManager orderBookCacheManager, 
-            MarketAndBalanceCache marketAndBalanceCache)
+            OrderBookCacheManager orderBookCacheManager)
             : base(appLifetime)
         {
             _logger = logger;
             _serviceBusTcpClient = serviceBusTcpClient;
             _orderBookCacheManager = orderBookCacheManager;
-            _marketAndBalanceCache = marketAndBalanceCache;
         }
 
         protected override void OnStarted()
@@ -33,7 +30,6 @@ namespace Service.External.Binance
             _logger.LogInformation("OnStarted has been called.");
             _serviceBusTcpClient.Start();
             _orderBookCacheManager.Start();
-            _marketAndBalanceCache.Start();
         }
 
         protected override void OnStopping()

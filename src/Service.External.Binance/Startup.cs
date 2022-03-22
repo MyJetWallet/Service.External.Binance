@@ -49,9 +49,7 @@ namespace Service.External.Binance
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcSchema<OrderBookSourceGrpc, IOrderBookSource>();
-                endpoints.MapGrpcSchema<ExternalMarketGrpc, IExternalMarket>();
                 endpoints.MapGrpcSchema<ExternalMarketSettingsManagerGrpc, IExternalMarketSettingsManagerGrpc>();
-                
 
                 endpoints.MapGrpcSchemaRegistry();
 

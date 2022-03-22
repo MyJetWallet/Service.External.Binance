@@ -30,12 +30,6 @@ namespace Service.External.Binance.Modules
             builder.RegisterInstance(user).AsSelf().SingleInstance();
 
             builder
-                .RegisterType<MarketAndBalanceCache>()
-                .AsSelf()
-                .AutoActivate()
-                .SingleInstance();
-
-            builder
                 .RegisterType<OrderBookCacheManager>()
                 .AsSelf()
                 .AutoActivate()

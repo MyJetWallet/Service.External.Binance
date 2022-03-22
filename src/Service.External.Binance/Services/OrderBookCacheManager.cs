@@ -199,5 +199,30 @@ namespace Service.External.Binance.Services
 
             return resp;
         }
+        
+        public List<ExchangeMarketInfo> GetMarkets()
+        {
+            try
+            {
+                var data = _externalMarketSettingsAccessor.GetExternalMarketSettingsList();
+                return data.Select(e => new ExchangeMarketInfo()
+                {
+                    Market = e.Market,
+                    BaseAsset = e.BaseAsset,
+                    QuoteAsset = e.QuoteAsset,
+                    MinVolume = e.MinVolume,
+                    PriceAccuracy = e.PriceAccuracy,
+                    VolumeAccuracy = e.VolumeAccuracy,
+                    AssociateInstrument = e.AssociateInstrument,
+                    AssociateBaseAsset = e.AssociateBaseAsset,
+                    AssociateQuoteAsset = e.AssociateQuoteAsset
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cannot get Binance GetMarketInfo");
+                throw;
+            }
+        }
     }
 }
